@@ -1,13 +1,16 @@
 package com.assignment.postblog.jwt;
 
 import com.assignment.postblog.dto.ResponseDto;
+import com.assignment.postblog.dto.TokenDto;
 import com.assignment.postblog.model.Member;
+import com.assignment.postblog.model.MemberRoleEnum;
 import com.assignment.postblog.model.RefreshToken;
 import com.assignment.postblog.repository.RefreshTokenRepository;
 import com.assignment.postblog.security.MemberDetailsImpl;
 import io.jsonwebtoken.*;
+import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
-import lombok.RequiredArgsConstructor;
+import io.jsonwebtoken.security.SecurityException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
@@ -21,7 +24,6 @@ import java.util.Date;
 import java.util.Optional;
 
 @Component
-@RequiredArgsConstructor
 @Slf4j
 public class JwtTokenProvider {
     private static final String AUTHORITIES_KEY = "auth";
@@ -35,7 +37,7 @@ public class JwtTokenProvider {
 
     public JwtTokenProvider(@Value("${jwt.token.key}") String secretKey, RefreshTokenRepository refreshTokenRepository) {
         this.refreshTokenRepository = refreshTokenRepository;
-        byte[] keyBytes = Decoder.BASE64.decode(secretKey);
+        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         this.key = Keys.hmacShaKeyFor(keyBytes);
     }
 
@@ -45,14 +47,14 @@ public class JwtTokenProvider {
         Date accessTokenExpiresIn = new Date(now + ACCESS_TOKEN_EXPIRE_TIME);
         String accessToken = Jwts.builder()
                 .setSubject(member.getNickname())
-                .claim(AUTHORITIES_KEY, Authority.ROLE_MEMBER.toString())
+                .claim(AUTHORITIES_KEY, MemberRoleEnum.ROLE_MEMBER.toString())
                 .setExpiration(accessTokenExpiresIn)
-                .signWith(key, SignatureAlgorithm.HS256)
+                .signWith(SignatureAlgorithm.HS256, key)
                 .compact();
 
         String refreshToken = Jwts.builder()
                 .setExpiration(new Date(now + REFRESH_TOKEN_EXPRIRE_TIME))
-                .signWith(key, SignatureAlgorithm.HS256)
+                .signWith(SignatureAlgorithm.HS256, key)
                 .compact();
 
         RefreshToken refreshTokenObject = RefreshToken.builder()
@@ -81,7 +83,9 @@ public class JwtTokenProvider {
 
     public boolean validateToken(String token) {
         try {
-            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+            Jwts.parser()
+                    .setSigningKey(key)
+                    .parseClaimsJws(token);
             return true;
         } catch (SecurityException | MalformedJwtException e) {
             log.info("Invalid JWT signature, 유효하지 않는 JWT 서명 입니다.");

@@ -4,16 +4,16 @@ import com.assignment.postblog.dto.CommentRequestDto;
 import com.assignment.postblog.model.Comment;
 import com.assignment.postblog.security.MemberDetailsImpl;
 import com.assignment.postblog.service.CommentService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Validated
 @RestController
 public class CommentController {
     private final CommentService commentService;
-    @Autowired
     public CommentController (CommentService commentService) {
         this.commentService = commentService;
     }

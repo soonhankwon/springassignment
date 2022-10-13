@@ -17,4 +17,7 @@ public class MemberResponseDto {
         this.password = responseDto.getPassword();
         this.role = responseDto.getRole();
     }
+
+    public MemberResponseDto(int value, String detail, String s) {
+    }
 }

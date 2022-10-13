@@ -49,7 +49,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (StringUtils.hasText(jwt) && tokenProvider.validateToken(jwt)) {
             Claims claims;
             try {
-                claims = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(jwt).getBody();
+                claims = Jwts.parser()
+                        .setSigningKey(key)
+                        .parseClaimsJws(jwt)
+                        .getBody();
             } catch (ExpiredJwtException e) {
                 claims = e.getClaims();
             }
